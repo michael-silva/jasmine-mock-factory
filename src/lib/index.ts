@@ -5,7 +5,7 @@ export interface SpyFacade<T> {
 }
 
 export declare type Spied<T> = {
-    [K in keyof T]: SpiedMember;
+    [K in Extract<keyof T, string>]: SpiedMember;
 }
 
 export interface SpiedAny {
@@ -30,7 +30,7 @@ class DynamicBase<T extends object> {
 
     // create a spy before it is directly read/written
     private stubProxyHandler = {
-        get: (target: T, propertyName: keyof T, receiver) => {
+        get: (target: T, propertyName: Extract<keyof T, string>, receiver) => {
             if (propertyName === '_spy') {
                 return this.spyProxy;
             }
@@ -39,7 +39,7 @@ class DynamicBase<T extends object> {
 
             return this.stub[propertyName];
         },
-        set: (target, propertyName: keyof T, value, receiver) => {
+        set: (target, propertyName: Extract<keyof T, string>, value, receiver) => {
             if (propertyName === '_spy') {
                 throw Error('Cannot modify _spy. It is part of the MockFactory');
             }
@@ -58,12 +58,12 @@ class DynamicBase<T extends object> {
 
     // create a spy before it is read from the spyFacade
     private spyProxyHanlder = {
-        get: (target: T, propertyName: keyof T, receiver) => {
+        get: (target: T, propertyName: Extract<keyof T, string>, receiver) => {
             this.ensureSpy(propertyName);
 
             return this.spy[propertyName];
         },
-        set: (target, propertyName: keyof T, value, receiver) => {
+        set: (target, propertyName: Extract<keyof T, string>, value, receiver) => {
             throw Error(`Cannot change _spy.${propertyName}, because it is part of the MockFactory`);
         },
     }
@@ -73,7 +73,7 @@ class DynamicBase<T extends object> {
         this.spyProxy = new Proxy(Object.create(null), this.spyProxyHanlder);
     }
 
-    private ensureSpy(propertyName: keyof T): void {
+    private ensureSpy(propertyName: Extract<keyof T, string>): void {
         // create spy if needed
         if (!this.spy[propertyName]) {
             try {
